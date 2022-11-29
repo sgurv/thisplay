@@ -10,5 +10,11 @@
     ],
     "idf.port": "/dev/ttyS0",
     "idf.pythonBinPath": "/home/sandeep/.espressif/python_env/idf4.4_py3.10_env/bin/python",
-    "idf.toolsPath": "/home/sandeep/.espressif"
+    "idf.toolsPath": "/home/sandeep/.espressif",
+    "files.associations": {
+        "esp_lcd_panel_ops.h": "c",
+        "esp_lcd_panel_vendor.h": "c",
+        "esp_lcd_panel_io.h": "c",
+        "esp_timer.h": "c"
+    }
 }

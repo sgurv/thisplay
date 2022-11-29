@@ -235,7 +235,6 @@
 /home/sandeep/espProjects/thisplay/build/esp-idf/vfs/CMakeFiles/install.dir
 /home/sandeep/espProjects/thisplay/build/esp-idf/vfs/CMakeFiles/install/local.dir
 /home/sandeep/espProjects/thisplay/build/esp-idf/vfs/CMakeFiles/install/strip.dir
-/home/sandeep/espProjects/thisplay/build/esp-idf/esp_eth/CMakeFiles/__idf_esp_eth.dir
 /home/sandeep/espProjects/thisplay/build/esp-idf/esp_eth/CMakeFiles/edit_cache.dir
 /home/sandeep/espProjects/thisplay/build/esp-idf/esp_eth/CMakeFiles/rebuild_cache.dir
 /home/sandeep/espProjects/thisplay/build/esp-idf/esp_eth/CMakeFiles/list_install_components.dir

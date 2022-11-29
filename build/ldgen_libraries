@@ -16,7 +16,6 @@
 /home/sandeep/espProjects/thisplay/build/esp-idf/esp_rom/libesp_rom.a
 /home/sandeep/espProjects/thisplay/build/esp-idf/hal/libhal.a
 /home/sandeep/espProjects/thisplay/build/esp-idf/vfs/libvfs.a
-/home/sandeep/espProjects/thisplay/build/esp-idf/esp_eth/libesp_eth.a
 /home/sandeep/espProjects/thisplay/build/esp-idf/tcpip_adapter/libtcpip_adapter.a
 /home/sandeep/espProjects/thisplay/build/esp-idf/esp_netif/libesp_netif.a
 /home/sandeep/espProjects/thisplay/build/esp-idf/esp_event/libesp_event.a
