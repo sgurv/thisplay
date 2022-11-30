@@ -10,6 +10,7 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "lvgl.h"
+//#include "esp_lvgl_port.h"
 
 static const char *TAG = "ws";
 
@@ -42,8 +43,7 @@ static const char *TAG = "ws";
 
 #define BLINK_TEST_GPIO     36 /* For debuging purpose*/
 
-
-//static lv_color_t buf1[LCD_H_RES * 20];
+//static lv_disp_t *disp;
 
 //LED global
 lv_obj_t * led1;
@@ -76,6 +76,9 @@ void app_main(void)
 {
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
+
+    // const lvgl_port_cfg_t lvgl_cfg = ESP_LVGL_PORT_INIT_CONFIG();
+    // esp_err_t err = lvgl_port_init(&lvgl_cfg);
 
     ESP_LOGI(TAG, "Test GPIO LED!");
     gpio_reset_pin(BLINK_TEST_GPIO);
@@ -113,7 +116,7 @@ void app_main(void)
         .spi_mode = 0,
         .trans_queue_depth = 10,
         .on_color_trans_done = lcd_notify_lvgl_flush_ready,
-        .user_ctx = &disp_drv,
+        .user_ctx = &disp_drv, //not disp drive for esp_lvgl_port
     };
 
     // Attach the LCD to the SPI bus
@@ -130,6 +133,30 @@ void app_main(void)
     //I guess ST7789 is very similar to ST7735
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(io_handle, &panel_config, &panel_handle));
 
+    /**********LVGL PORT here*/
+
+    /* Add LCD screen */
+    // const lvgl_port_display_cfg_t disp_cfg = {
+    //     .io_handle = io_handle,
+    //     .panel_handle = panel_handle,
+    //     .buffer_size = LCD_H_RES * 20,
+    //     .double_buffer = true,
+    //     .hres = LCD_H_RES,
+    //     .vres = LCD_V_RES,
+    //     .monochrome = false,
+    //     /* Rotation values must be same as used in esp_lcd for initial settings of the screen */
+    //     .rotation = {
+    //         .swap_xy = false,
+    //         .mirror_x = false,
+    //         .mirror_y = false,
+    //     },
+    //     .flags = {
+    //         .buff_dma = true,
+    //     }
+    // };
+
+    // disp = lvgl_port_add_disp(&disp_cfg);
+
     ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
 
@@ -140,7 +167,7 @@ void app_main(void)
     // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
     ESP_ERROR_CHECK(esp_lcd_panel_disp_off(panel_handle, true));
 
-    ESP_LOGI(TAG, "Turn on LCD backlight");
+    // ESP_LOGI(TAG, "Turn on LCD backlight");
     gpio_set_level(LCD_PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_ON_LEVEL);
 
     ESP_LOGI(TAG, "Initialize LVGL library");
@@ -177,6 +204,8 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
 
 //----UI
+    /* Wait for the other task done the screen operation */
+//    lvgl_port_lock(0);
     //Button 1
     lv_obj_t * btn = lv_btn_create(lv_scr_act());     /*Add a button the current screen*/
     lv_obj_set_pos(btn, 5, 5);                            /*Set its position*/
@@ -193,37 +222,19 @@ void app_main(void)
     //lv_obj_align(led1, LV_ALIGN_CENTER, -80, 0);
     lv_led_set_color(led1, lv_palette_main(LV_PALETTE_LIME));
     lv_led_off(led1);
+
+    /* Screen operation done -> release for the other task */
+//    lvgl_port_unlock();
 //----END UI
-
-    // while(1){
-    //     gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_ON_LEVEL);
-
-    //     vTaskDelay(pdMS_TO_TICKS(500));
-
-    //     gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_OFF_LEVEL);
-
-    //     vTaskDelay(pdMS_TO_TICKS(500));
-    // }
 
     while (1) {
         // raise the task priority of LVGL and/or reduce the handler period can improve the performance
         vTaskDelay(pdMS_TO_TICKS(10));
         // The task running lv_timer_handler should have lower priority than that running `lv_tick_inc`
         lv_timer_handler();
-        gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_ON_LEVEL);
-        vTaskDelay(pdMS_TO_TICKS(10));
-        gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_OFF_LEVEL);
+        //gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_ON_LEVEL);
+        //vTaskDelay(pdMS_TO_TICKS(10));
+        //gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_OFF_LEVEL);
     }
 
-    // should never reach here
-    while(1){ // test loop
-    gpio_set_level(LCD_PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_ON_LEVEL);
-
-    vTaskDelay(pdMS_TO_TICKS(500));
-
-    gpio_set_level(LCD_PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_OFF_LEVEL);
-
-    vTaskDelay(pdMS_TO_TICKS(500));
-
-    }
 }
