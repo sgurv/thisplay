@@ -13,8 +13,8 @@
 
 static const char *TAG = "ws";
 
-// SPI1 connected to LCD in Waveshare-Pico LCD
-#define LCD_HOST  SPI1_HOST
+// SPI2(according to ESP-IDF) connected to LCD in Waveshare-Pico LCD
+#define LCD_HOST  SPI2_HOST
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// Update the following configuration according to the LCD spec //////////////////////////////
@@ -24,12 +24,12 @@ static const char *TAG = "ws";
 #define LCD_BK_LIGHT_OFF_LEVEL !LCD_BK_LIGHT_ON_LEVEL
 #define LCD_PIN_NUM_SCLK           10
 #define LCD_PIN_NUM_MOSI           11
-#define LCD_PIN_NUM_MISO           -1
+#define LCD_PIN_NUM_MISO           GPIO_NUM_NC /*not used*/
 #define LCD_PIN_NUM_LCD_DC         18
 #define LCD_PIN_NUM_LCD_RST        21
 #define LCD_PIN_NUM_LCD_CS         9
 #define LCD_PIN_NUM_BK_LIGHT       45
-#define LCD_PIN_NUM_TOUCH_CS       -1
+#define LCD_PIN_NUM_TOUCH_CS       GPIO_NUM_NC
 
 // The pixel number in horizontal and vertical
 #define LCD_H_RES              160
@@ -39,6 +39,14 @@ static const char *TAG = "ws";
 #define LCD_PARAM_BITS         8
 
 #define LVGL_TICK_PERIOD_MS    2
+
+#define BLINK_TEST_GPIO     36 /* For debuging purpose*/
+
+
+//static lv_color_t buf1[LCD_H_RES * 20];
+
+//LED global
+lv_obj_t * led1;
 
 static bool lcd_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
@@ -69,22 +77,28 @@ void app_main(void)
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 
+    ESP_LOGI(TAG, "Test GPIO LED!");
+    gpio_reset_pin(BLINK_TEST_GPIO);
+    /* Set the GPIO as a push/pull output */
+    gpio_set_direction(BLINK_TEST_GPIO, GPIO_MODE_OUTPUT);
+
     ESP_LOGI(TAG, "Turn off LCD backlight");
     gpio_config_t bk_gpio_config = {
         .mode = GPIO_MODE_OUTPUT,
         .pin_bit_mask = 1ULL << LCD_PIN_NUM_BK_LIGHT
     };
     ESP_ERROR_CHECK(gpio_config(&bk_gpio_config));
-    gpio_set_level(LCD_PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_OFF_LEVEL);
+
+    gpio_set_level(LCD_PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_ON_LEVEL);
 
     ESP_LOGI(TAG, "Initialize SPI bus");
     spi_bus_config_t buscfg = {
         .sclk_io_num = LCD_PIN_NUM_SCLK,
         .mosi_io_num = LCD_PIN_NUM_MOSI,
         .miso_io_num = LCD_PIN_NUM_MISO,
-        .quadwp_io_num = -1,
-        .quadhd_io_num = -1,
-        .max_transfer_sz = LCD_H_RES * 80 * sizeof(uint16_t),
+        .quadwp_io_num = GPIO_NUM_NC,
+        .quadhd_io_num = GPIO_NUM_NC,
+        .max_transfer_sz = LCD_H_RES * 20 * sizeof(lv_color_t), /* buffer_size * sizeof(lv_color_t) */
     };
     ESP_ERROR_CHECK(spi_bus_initialize(LCD_HOST, &buscfg, SPI_DMA_CH_AUTO));
 
@@ -121,7 +135,7 @@ void app_main(void)
 
     //ESP_ERROR_CHECK(esp_lcd_panel_invert_color(panel_handle, true));
 
-    ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
+    //ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
 
     // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
     ESP_ERROR_CHECK(esp_lcd_panel_disp_off(panel_handle, true));
@@ -131,13 +145,15 @@ void app_main(void)
 
     ESP_LOGI(TAG, "Initialize LVGL library");
     lv_init();
-    // alloc draw buffers used by LVGL
-    // it's recommended to choose the size of the draw buffer(s) to be at least 1/10 screen sized
+
+    //alloc draw buffers used by LVGL
+    //it's recommended to choose the size of the draw buffer(s) to be at least 1/10 screen sized
     lv_color_t *buf1 = heap_caps_malloc(LCD_H_RES * 20 * sizeof(lv_color_t), MALLOC_CAP_DMA);
     assert(buf1);
+    
     lv_color_t *buf2 = heap_caps_malloc(LCD_H_RES * 20 * sizeof(lv_color_t), MALLOC_CAP_DMA);
     assert(buf2);
-    // initialize LVGL draw buffers
+    //initialize LVGL draw buffers
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, LCD_H_RES * 20);
 
     ESP_LOGI(TAG, "Register display driver to LVGL");
@@ -147,7 +163,7 @@ void app_main(void)
     disp_drv.flush_cb = lcd_lvgl_flush_cb;
     //disp_drv.drv_update_cb = example_lvgl_port_update_callback;
     disp_drv.draw_buf = &disp_buf;
-    //disp_drv.user_data = panel_handle;
+    disp_drv.user_data = panel_handle;
     lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
 
     ESP_LOGI(TAG, "Install LVGL tick timer");
@@ -160,10 +176,54 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
 
+//----UI
+    //Button 1
+    lv_obj_t * btn = lv_btn_create(lv_scr_act());     /*Add a button the current screen*/
+    lv_obj_set_pos(btn, 5, 5);                            /*Set its position*/
+    lv_obj_set_size(btn, 70, 30);                          /*Set its size*/
+    //lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_ALL, NULL);           /*Assign a callback to the button*/
+
+    lv_obj_t * label = lv_label_create(btn);          /*Add a label to the button*/
+    lv_label_set_text(label, "Button A");                     /*Set the labels text*/
+    lv_obj_center(label);
+
+    /*Create a LED and switch it OFF*/
+    led1  = lv_led_create(lv_scr_act());
+    lv_obj_set_pos(led1, 35, 50);
+    //lv_obj_align(led1, LV_ALIGN_CENTER, -80, 0);
+    lv_led_set_color(led1, lv_palette_main(LV_PALETTE_LIME));
+    lv_led_off(led1);
+//----END UI
+
+    // while(1){
+    //     gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_ON_LEVEL);
+
+    //     vTaskDelay(pdMS_TO_TICKS(500));
+
+    //     gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_OFF_LEVEL);
+
+    //     vTaskDelay(pdMS_TO_TICKS(500));
+    // }
+
     while (1) {
         // raise the task priority of LVGL and/or reduce the handler period can improve the performance
         vTaskDelay(pdMS_TO_TICKS(10));
         // The task running lv_timer_handler should have lower priority than that running `lv_tick_inc`
         lv_timer_handler();
+        gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_ON_LEVEL);
+        vTaskDelay(pdMS_TO_TICKS(10));
+        gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_OFF_LEVEL);
+    }
+
+    // should never reach here
+    while(1){ // test loop
+    gpio_set_level(LCD_PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_ON_LEVEL);
+
+    vTaskDelay(pdMS_TO_TICKS(500));
+
+    gpio_set_level(LCD_PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_OFF_LEVEL);
+
+    vTaskDelay(pdMS_TO_TICKS(500));
+
     }
 }

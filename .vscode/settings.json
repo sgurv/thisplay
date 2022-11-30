@@ -8,7 +8,7 @@
         "interface/ftdi/esp32_devkitj_v1.cfg",
         "target/esp32s2.cfg"
     ],
-    "idf.port": "/dev/ttyS0",
+    "idf.port": "/dev/ttyACM0",
     "idf.pythonBinPath": "/home/sandeep/.espressif/python_env/idf4.4_py3.10_env/bin/python",
     "idf.toolsPath": "/home/sandeep/.espressif",
     "files.associations": {
@@ -16,5 +16,6 @@
         "esp_lcd_panel_vendor.h": "c",
         "esp_lcd_panel_io.h": "c",
         "esp_timer.h": "c"
-    }
+    },
+    "idf.flashType": "UART"
 }
