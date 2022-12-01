@@ -15,7 +15,10 @@
         "esp_lcd_panel_ops.h": "c",
         "esp_lcd_panel_vendor.h": "c",
         "esp_lcd_panel_io.h": "c",
-        "esp_timer.h": "c"
+        "esp_timer.h": "c",
+        "esp_lcd_panel_interface.h": "c",
+        "esp_lcd_st7735.h": "c",
+        "esp_lcd_panel_commands.h": "c"
     },
     "idf.flashType": "UART"
 }

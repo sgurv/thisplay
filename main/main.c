@@ -10,6 +10,7 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "lvgl.h"
+#include "esp_lcd_st7735.h"
 //#include "esp_lvgl_port.h"
 
 static const char *TAG = "ws";
@@ -130,7 +131,7 @@ void app_main(void)
         .bits_per_pixel = 16,
     };
 
-    //I guess ST7789 is very similar to ST7735
+    //ST7735 LCD init
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(io_handle, &panel_config, &panel_handle));
 
     /**********LVGL PORT here*/
