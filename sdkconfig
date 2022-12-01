@@ -1216,13 +1216,6 @@ CONFIG_WPA_MBEDTLS_CRYPTO=y
 # end of Supplicant
 
 #
-# ESP LCD TOUCH
-#
-CONFIG_ESP_LCD_TOUCH_MAX_POINTS=5
-CONFIG_ESP_LCD_TOUCH_MAX_BUTTONS=1
-# end of ESP LCD TOUCH
-
-#
 # LVGL configuration
 #
 CONFIG_LV_CONF_SKIP=y
@@ -1522,6 +1515,13 @@ CONFIG_LV_USE_SNAPSHOT=y
 # CONFIG_LV_USE_DEMO_MUSIC is not set
 # end of Demos
 # end of LVGL configuration
+
+#
+# ESP LCD TOUCH
+#
+CONFIG_ESP_LCD_TOUCH_MAX_POINTS=5
+CONFIG_ESP_LCD_TOUCH_MAX_BUTTONS=1
+# end of ESP LCD TOUCH
 # end of Component config
 
 #

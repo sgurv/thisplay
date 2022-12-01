@@ -16,8 +16,17 @@
 
 #include "esp_lcd_st7735.h"
 
+typedef struct
+{
+    uint8_t cmd;
+    uint8_t data[16];
+    uint8_t data_bytes;
+} lcd_init_cmd_t;
 
-static const char *TAG = "lcd_panel.st7735";
+#define     ST7735_INIT_LENGTH_MASK     0x1F
+#define     ST7735_INIT_DONE_FLAG       0xFF
+
+static const char *TAG = "st7735";
 
 static esp_err_t panel_st7735_del(esp_lcd_panel_t *panel);
 static esp_err_t panel_st7735_reset(esp_lcd_panel_t *panel);
@@ -148,17 +157,80 @@ static esp_err_t panel_st7735_init(esp_lcd_panel_t *panel)
 {
     st7735_panel_t *st7735 = __containerof(panel, st7735_panel_t, base);
     esp_lcd_panel_io_handle_t io = st7735->io;
+
+    // esp_lcd_panel_io_tx_param(io, LCD_CMD_MADCTL, (uint8_t[]) {
+    //     st7735->madctl_val,
+    // }, 1);
+    // esp_lcd_panel_io_tx_param(io, LCD_CMD_COLMOD, (uint8_t[]) {
+    //     st7735->colmod_cal,
+    // }, 1);
+    
+
+    const lcd_init_cmd_t st7735_init[] =
+    {   /*cmd,data[],data_len*/
+        //{ST7735_CMD_SWRESET,{},0,150},
+        //{ST7735_CMD_SLPOUT,{},0,255/*500ms*/},
+        /*Part 1*/
+        {ST7735_CMD_FRMCTR1,{0x01, 0x2C, 0x2D},3},
+        {ST7735_CMD_FRMCTR2,{0x01, 0x2C, 0x2D},3},
+        {ST7735_CMD_FRMCTR3,{0x01, 0x2C, 0x2D,0x01, 0x2C, 0x2D},6},
+        {ST7735_CMD_INVCTR,{0x07},1},
+        {ST7735_CMD_PWCTR1,{0xA2,0x02,0x84},3},
+        {ST7735_CMD_PWCTR2,{0xC5},1},
+        {ST7735_CMD_PWCTR3,{0x0A,0x00},2},
+        {ST7735_CMD_PWCTR4,{0x8A,0x2A},2},
+        {ST7735_CMD_PWCTR5,{0x8A, 0xEE},2},
+        {ST7735_CMD_VMCTR1,{0x0E},1},
+        {ST7735_CMD_INVOFF,{},0},
+
+        {ST7735_CMD_MADCTL,{(ST7735_PARAM_MADCTL_MV | ST7735_PARAM_MADCTL_RGB)},1}, // use st7735->madctl_val after test
+        {ST7735_CMD_COLMOD,{ST7735_PARAM_COLMOD_IFPF_16B_PER_PIXEL},1}, // .. st7735->colmod_cal
+        /*Part 2*/
+        {ST7735_CMD_CASET,{0x00,0x00,0x00,0x4F},4},
+        {ST7735_CMD_RASET,{0x00,0x00,0x00,0x9F},4},
+        {ST7735_CMD_INVON,{},0},
+        /*Part 3*/
+        {ST7735_CMD_GAMCTRP1,{0x02, 0x1c, 0x07, 0x12,
+                            0x37, 0x32, 0x29, 0x2d,
+                            0x29, 0x25, 0x2B, 0x39,
+                            0x00, 0x01, 0x03, 0x10},16},
+        {ST7735_CMD_GAMCTRN1,{0x03, 0x1d, 0x07, 0x06,
+                            0x2E, 0x2C, 0x29, 0x2D,
+                            0x2E, 0x2E, 0x37, 0x3F,
+                            0x00, 0x00, 0x02, 0x10},16},
+        {LCD_CMD_NOP, { 0 }, ST7735_INIT_DONE_FLAG }
+    };
+
+    //1. Hardware Reset
+
+    //2. Execute Command Lists
+
+    //Software reset
+    esp_lcd_panel_io_tx_param(io, LCD_CMD_SWRESET, NULL, 0);
+    vTaskDelay(pdMS_TO_TICKS(150)); // spec, wait at least 5m before sending new command
+
     // LCD goes into sleep mode and display will be turned off after power on reset, exit sleep mode first
     esp_lcd_panel_io_tx_param(io, LCD_CMD_SLPOUT, NULL, 0);
-    vTaskDelay(pdMS_TO_TICKS(100));
-    esp_lcd_panel_io_tx_param(io, LCD_CMD_MADCTL, (uint8_t[]) {
-        st7735->madctl_val,
-    }, 1);
-    esp_lcd_panel_io_tx_param(io, LCD_CMD_COLMOD, (uint8_t[]) {
-        st7735->colmod_cal,
-    }, 1);
-    // turn on display
+    vTaskDelay(pdMS_TO_TICKS(500));
+
+    //Loop thru lcd commands
+    ESP_LOGI(TAG, "ST7735 command loop");
+    int cmd = 0;
+    while ( st7735_init[cmd].data_bytes != ST7735_INIT_DONE_FLAG )
+    {
+        ESP_LOGD(TAG, "Sending CMD: %02x, len: %d", st7735_init[cmd].cmd,
+                 st7735_init[cmd].data_bytes & ST7735_INIT_LENGTH_MASK);
+        esp_lcd_panel_io_tx_param(
+            io, st7735_init[cmd].cmd, st7735_init[cmd].data,
+            st7735_init[cmd].data_bytes & ST7735_INIT_LENGTH_MASK);
+        cmd++;
+    }
+
+    //3. Turn on display
+    esp_lcd_panel_io_tx_param(io, LCD_CMD_NORON, NULL, 0);
+    vTaskDelay(pdMS_TO_TICKS(10));
     esp_lcd_panel_io_tx_param(io, LCD_CMD_DISPON, NULL, 0);
+    vTaskDelay(pdMS_TO_TICKS(100));
 
     return ESP_OK;
 }

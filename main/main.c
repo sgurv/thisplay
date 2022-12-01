@@ -132,7 +132,7 @@ void app_main(void)
     };
 
     //ST7735 LCD init
-    ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(io_handle, &panel_config, &panel_handle));
+    ESP_ERROR_CHECK(esp_lcd_new_panel_st7735(io_handle, &panel_config, &panel_handle));
 
     /**********LVGL PORT here*/
 
