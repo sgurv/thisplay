@@ -165,9 +165,9 @@ void app_main(void)
 
     ESP_ERROR_CHECK(esp_lcd_panel_invert_color(panel_handle, true));
 
-    ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, false, true));
+    ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
 
-    ESP_ERROR_CHECK(esp_lcd_panel_swap_xy(panel_handle, true));
+    ESP_ERROR_CHECK(esp_lcd_panel_swap_xy(panel_handle, true)); //Why true?
     // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
     //ESP_ERROR_CHECK(esp_lcd_panel_disp_off(panel_handle, true)); --nooop
 
