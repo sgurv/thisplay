@@ -11,7 +11,7 @@
 #include "esp_log.h"
 #include "lvgl.h"
 #include "esp_lcd_st7735.h"
-//#include "esp_lvgl_port.h"
+#include "esp_lvgl_port.h"
 
 static const char *TAG = "ws";
 
@@ -21,7 +21,7 @@ static const char *TAG = "ws";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// Update the following configuration according to the LCD spec //////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define LCD_PIXEL_CLOCK_HZ     (10 * 1000 * 1000)
+#define LCD_PIXEL_CLOCK_HZ     (20 * 1000 * 1000)
 #define LCD_BK_LIGHT_ON_LEVEL  1
 #define LCD_BK_LIGHT_OFF_LEVEL !LCD_BK_LIGHT_ON_LEVEL
 #define LCD_PIN_NUM_SCLK           10
@@ -40,7 +40,7 @@ static const char *TAG = "ws";
 #define LCD_CMD_BITS           8
 #define LCD_PARAM_BITS         8
 
-#define LVGL_TICK_PERIOD_MS    2
+#define LVGL_TICK_PERIOD_MS    5
 
 #define BLINK_TEST_GPIO     36 /* For debuging purpose*/
 
@@ -78,8 +78,8 @@ void app_main(void)
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 
-    // const lvgl_port_cfg_t lvgl_cfg = ESP_LVGL_PORT_INIT_CONFIG();
-    // esp_err_t err = lvgl_port_init(&lvgl_cfg);
+    //const lvgl_port_cfg_t lvgl_cfg = ESP_LVGL_PORT_INIT_CONFIG();
+    
 
     ESP_LOGI(TAG, "Test GPIO LED!");
     gpio_reset_pin(BLINK_TEST_GPIO);
@@ -127,7 +127,7 @@ void app_main(void)
     esp_lcd_panel_handle_t panel_handle = NULL;
     esp_lcd_panel_dev_config_t panel_config = {
         .reset_gpio_num = LCD_PIN_NUM_LCD_RST,
-        .color_space = ESP_LCD_COLOR_SPACE_RGB, //TODO: complete it
+        .color_space = ESP_LCD_COLOR_SPACE_BGR, //TODO: complete it
         .bits_per_pixel = 16,
     };
 
@@ -135,8 +135,8 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7735(io_handle, &panel_config, &panel_handle));
 
     /**********LVGL PORT here*/
-
-    /* Add LCD screen */
+    // esp_err_t err = lvgl_port_init(&lvgl_cfg);
+    // /* Add LCD screen */
     // const lvgl_port_display_cfg_t disp_cfg = {
     //     .io_handle = io_handle,
     //     .panel_handle = panel_handle,
@@ -161,17 +161,20 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
 
-    //ESP_ERROR_CHECK(esp_lcd_panel_invert_color(panel_handle, true));
+    ESP_ERROR_CHECK(esp_lcd_panel_set_gap(panel_handle,1,26)); //TODO: Check why this offset required 
 
-    //ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
+    ESP_ERROR_CHECK(esp_lcd_panel_invert_color(panel_handle, true));
 
+    ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, false, true));
+
+    ESP_ERROR_CHECK(esp_lcd_panel_swap_xy(panel_handle, true));
     // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
-    ESP_ERROR_CHECK(esp_lcd_panel_disp_off(panel_handle, true));
+    //ESP_ERROR_CHECK(esp_lcd_panel_disp_off(panel_handle, true)); --nooop
 
     // ESP_LOGI(TAG, "Turn on LCD backlight");
     gpio_set_level(LCD_PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_ON_LEVEL);
 
-    ESP_LOGI(TAG, "Initialize LVGL library");
+    // ESP_LOGI(TAG, "Initialize LVGL library");
     lv_init();
 
     //alloc draw buffers used by LVGL
@@ -204,37 +207,42 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
 
-//----UI
-    /* Wait for the other task done the screen operation */
+// //----UI
+//     /* Wait for the other task done the screen operation */
 //    lvgl_port_lock(0);
     //Button 1
     lv_obj_t * btn = lv_btn_create(lv_scr_act());     /*Add a button the current screen*/
-    lv_obj_set_pos(btn, 5, 5);                            /*Set its position*/
+    lv_obj_set_pos(btn, 5, 10);                            /*Set its position*/
     lv_obj_set_size(btn, 70, 30);                          /*Set its size*/
     //lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_ALL, NULL);           /*Assign a callback to the button*/
 
     lv_obj_t * label = lv_label_create(btn);          /*Add a label to the button*/
-    lv_label_set_text(label, "Button A");                     /*Set the labels text*/
+    lv_label_set_text(label, "OK A");                     /*Set the labels text*/
     lv_obj_center(label);
 
     /*Create a LED and switch it OFF*/
     led1  = lv_led_create(lv_scr_act());
-    lv_obj_set_pos(led1, 35, 50);
+    lv_obj_set_pos(led1, 20, 50);
     //lv_obj_align(led1, LV_ALIGN_CENTER, -80, 0);
-    lv_led_set_color(led1, lv_palette_main(LV_PALETTE_LIME));
-    lv_led_off(led1);
+    lv_led_set_color(led1, lv_palette_main(LV_PALETTE_AMBER));
+    lv_led_on(led1);
 
     /* Screen operation done -> release for the other task */
 //    lvgl_port_unlock();
 //----END UI
-
+    int i = 0;
     while (1) {
         // raise the task priority of LVGL and/or reduce the handler period can improve the performance
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(30));
         // The task running lv_timer_handler should have lower priority than that running `lv_tick_inc`
         lv_timer_handler();
         //gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_ON_LEVEL);
         //vTaskDelay(pdMS_TO_TICKS(10));
+        if(++i == 200){
+            lv_led_toggle(led1);
+            i = 0;
+        }
+        
         //gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_OFF_LEVEL);
     }
 

@@ -71,7 +71,7 @@ esp_err_t esp_lcd_new_panel_st7735(const esp_lcd_panel_io_handle_t io, const esp
         st7735->madctl_val = 0;
         break;
     case ESP_LCD_COLOR_SPACE_BGR:
-        st7735->madctl_val |= LCD_CMD_BGR_BIT;
+        st7735->madctl_val |= ST7735_PARAM_MADCTL_BGR;
         break;
     default:
         ESP_GOTO_ON_FALSE(false, ESP_ERR_NOT_SUPPORTED, err, TAG, "unsupported color space");
@@ -81,11 +81,11 @@ esp_err_t esp_lcd_new_panel_st7735(const esp_lcd_panel_io_handle_t io, const esp
     uint8_t fb_bits_per_pixel = 0;
     switch (panel_dev_config->bits_per_pixel) {
     case 16: // RGB565
-        st7735->colmod_cal = 0x55;
+        st7735->colmod_cal = ST7735_PARAM_COLMOD_IFPF_16B_PER_PIXEL;
         fb_bits_per_pixel = 16;
         break;
     case 18: // RGB666
-        st7735->colmod_cal = 0x66;
+        st7735->colmod_cal = ST7735_PARAM_COLMOD_IFPF_18B_PER_PIXEL;
         // each color component (R/G/B) should occupy the 6 high bits of a byte, which means 3 full bytes are required for a pixel
         fb_bits_per_pixel = 24;
         break;
@@ -183,8 +183,8 @@ static esp_err_t panel_st7735_init(esp_lcd_panel_t *panel)
         {ST7735_CMD_VMCTR1,{0x0E},1},
         {ST7735_CMD_INVOFF,{},0},
 
-        {ST7735_CMD_MADCTL,{(ST7735_PARAM_MADCTL_MV | ST7735_PARAM_MADCTL_RGB)},1}, // use st7735->madctl_val after test
-        {ST7735_CMD_COLMOD,{ST7735_PARAM_COLMOD_IFPF_16B_PER_PIXEL},1}, // .. st7735->colmod_cal
+        {ST7735_CMD_MADCTL,{st7735->madctl_val},1}, // use st7735->madctl_val after test
+        {ST7735_CMD_COLMOD,{st7735->colmod_cal},1}, // .. st7735->colmod_cal
         /*Part 2*/
         {ST7735_CMD_CASET,{0x00,0x00,0x00,0x4F},4},
         {ST7735_CMD_RASET,{0x00,0x00,0x00,0x9F},4},
