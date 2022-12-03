@@ -44,7 +44,7 @@ static const char *TAG = "ws";
 
 #define BLINK_TEST_GPIO     36 /* For debuging purpose*/
 
-//static lv_disp_t *disp;
+static lv_disp_t *disp;
 
 //LED global
 lv_obj_t * led1;
@@ -78,7 +78,7 @@ void app_main(void)
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 
-    //const lvgl_port_cfg_t lvgl_cfg = ESP_LVGL_PORT_INIT_CONFIG();
+    lvgl_port_cfg_t lvgl_cfg = ESP_LVGL_PORT_INIT_CONFIG();
     
 
     ESP_LOGI(TAG, "Test GPIO LED!");
@@ -134,30 +134,6 @@ void app_main(void)
     //ST7735 LCD init
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7735(io_handle, &panel_config, &panel_handle));
 
-    /**********LVGL PORT here*/
-    // esp_err_t err = lvgl_port_init(&lvgl_cfg);
-    // /* Add LCD screen */
-    // const lvgl_port_display_cfg_t disp_cfg = {
-    //     .io_handle = io_handle,
-    //     .panel_handle = panel_handle,
-    //     .buffer_size = LCD_H_RES * 20,
-    //     .double_buffer = true,
-    //     .hres = LCD_H_RES,
-    //     .vres = LCD_V_RES,
-    //     .monochrome = false,
-    //     /* Rotation values must be same as used in esp_lcd for initial settings of the screen */
-    //     .rotation = {
-    //         .swap_xy = false,
-    //         .mirror_x = false,
-    //         .mirror_y = false,
-    //     },
-    //     .flags = {
-    //         .buff_dma = true,
-    //     }
-    // };
-
-    // disp = lvgl_port_add_disp(&disp_cfg);
-
     ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
 
@@ -173,6 +149,33 @@ void app_main(void)
 
     // ESP_LOGI(TAG, "Turn on LCD backlight");
     gpio_set_level(LCD_PIN_NUM_BK_LIGHT, LCD_BK_LIGHT_ON_LEVEL);
+
+    // /**********LVGL PORT here*/
+    // lvgl_cfg.task_affinity = -1;
+    // esp_err_t err = lvgl_port_init(&lvgl_cfg);
+
+    // /* Add LCD screen */
+    // const lvgl_port_display_cfg_t disp_cfg = {
+    //     .io_handle = io_handle,
+    //     .panel_handle = panel_handle,
+    //     .buffer_size = LCD_H_RES * 20,
+    //     .double_buffer = true,
+    //     .hres = LCD_H_RES,
+    //     .vres = LCD_V_RES,
+    //     .monochrome = false,
+    //     /* Rotation values must be same as used in esp_lcd for initial settings of the screen */
+    //     .rotation = {
+    //         .swap_xy = true,
+    //         .mirror_x = true,
+    //         .mirror_y = false,
+    //     },
+    //     .flags = {
+    //         .buff_dma = true,
+    //     }
+    // };
+
+    // disp = lvgl_port_add_disp(&disp_cfg);
+    /************END LVGL Port*/
 
     // ESP_LOGI(TAG, "Initialize LVGL library");
     lv_init();
@@ -198,7 +201,7 @@ void app_main(void)
     lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
 
     ESP_LOGI(TAG, "Install LVGL tick timer");
-    // Tick interface for LVGL (using esp_timer to generate 2ms periodic event)
+    // Tick interface for LVGL (using esp_timer to generate 5ms periodic event)
     const esp_timer_create_args_t lvgl_tick_timer_args = {
         .callback = &lcd_increase_lvgl_tick,
         .name = "lvgl_tick"
@@ -217,7 +220,7 @@ void app_main(void)
     //lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_ALL, NULL);           /*Assign a callback to the button*/
 
     lv_obj_t * label = lv_label_create(btn);          /*Add a label to the button*/
-    lv_label_set_text(label, "OK A");                     /*Set the labels text*/
+    lv_label_set_text(label, "Yo Yo");                     /*Set the labels text*/
     lv_obj_center(label);
 
     /*Create a LED and switch it OFF*/
@@ -238,8 +241,10 @@ void app_main(void)
         lv_timer_handler();
         //gpio_set_level(BLINK_TEST_GPIO, LCD_BK_LIGHT_ON_LEVEL);
         //vTaskDelay(pdMS_TO_TICKS(10));
-        if(++i == 200){
+        if(++i == 50){
+            //lvgl_port_lock(0);
             lv_led_toggle(led1);
+            //lvgl_port_unlock();
             i = 0;
         }
         

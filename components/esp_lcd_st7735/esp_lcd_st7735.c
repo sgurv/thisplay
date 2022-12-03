@@ -36,7 +36,7 @@ static esp_err_t panel_st7735_invert_color(esp_lcd_panel_t *panel, bool invert_c
 static esp_err_t panel_st7735_mirror(esp_lcd_panel_t *panel, bool mirror_x, bool mirror_y);
 static esp_err_t panel_st7735_swap_xy(esp_lcd_panel_t *panel, bool swap_axes);
 static esp_err_t panel_st7735_set_gap(esp_lcd_panel_t *panel, int x_gap, int y_gap);
-static esp_err_t panel_st7735_disp_off(esp_lcd_panel_t *panel, bool off);
+static esp_err_t panel_st7735_disp_on_off(esp_lcd_panel_t *panel, bool off);
 
 typedef struct {
     esp_lcd_panel_t base;
@@ -106,7 +106,7 @@ esp_err_t esp_lcd_new_panel_st7735(const esp_lcd_panel_io_handle_t io, const esp
     st7735->base.set_gap = panel_st7735_set_gap;
     st7735->base.mirror = panel_st7735_mirror;
     st7735->base.swap_xy = panel_st7735_swap_xy;
-    st7735->base.disp_off = panel_st7735_disp_off;
+    st7735->base.disp_on_off = panel_st7735_disp_on_off;
     *ret_panel = &(st7735->base);
     ESP_LOGD(TAG, "new st7735 panel @%p", st7735);
 
@@ -323,7 +323,7 @@ static esp_err_t panel_st7735_set_gap(esp_lcd_panel_t *panel, int x_gap, int y_g
     return ESP_OK;
 }
 
-static esp_err_t panel_st7735_disp_off(esp_lcd_panel_t *panel, bool off)
+static esp_err_t panel_st7735_disp_on_off(esp_lcd_panel_t *panel, bool off)
 {
     st7735_panel_t *st7735 = __containerof(panel, st7735_panel_t, base);
     esp_lcd_panel_io_handle_t io = st7735->io;
