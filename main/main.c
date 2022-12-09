@@ -53,6 +53,14 @@ void app_main(void)
     lv_led_set_color(led1, lv_palette_main(LV_PALETTE_AMBER));
     lv_led_on(led1);
 
+    const char * data = "Sandeep Guria";
+
+    /*Create a 80x80 QR code*/
+    lv_obj_t * qr = lv_qrcode_create(lv_scr_act(), 80, lv_color_hex3(0x33f), lv_color_hex3(0xeef));
+    lv_obj_set_pos(qr, 80, 0);
+    /*Set data*/
+    lv_qrcode_update(qr, data, strlen(data));
+
     // /* Screen operation done -> release for the other task */
     bsp_display_unlock();
 //----END UI
