@@ -4,6 +4,13 @@
     "idf.adapterTargetName": "esp32s2",
     "files.associations": {
         "*.inc": "c",
-        "esp_lcd_panel_io.h": "c"
+        "esp_lcd_panel_io.h": "c",
+        "lvgl.h": "c",
+        "esp_lcd_st7735.h": "c",
+        "esp_lcd_panel_ops.h": "c",
+        "esp_lcd_panel_vendor.h": "c",
+        "bsp_thisplay.h": "c",
+        "esp_timer.h": "c",
+        "gpio.h": "c"
     }
 }

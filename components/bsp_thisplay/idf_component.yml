@@ -1,0 +1,13 @@
+version: "1.0.0"
+description: Board Support Package for Waveshare ESP32-S2-Pico LCD
+url: https://sandeepguria.in/
+
+targets:
+  - esp32s2
+
+dependencies:
+  idf: ">=5.0"
+
+  lvgl/lvgl:
+    version: "^8"
+    public: true
