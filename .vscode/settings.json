@@ -11,6 +11,8 @@
         "esp_lcd_panel_vendor.h": "c",
         "bsp_thisplay.h": "c",
         "esp_timer.h": "c",
-        "gpio.h": "c"
+        "gpio.h": "c",
+        "sdkconfig.h": "c",
+        "spi_master.h": "c"
     }
 }

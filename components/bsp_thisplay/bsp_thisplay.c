@@ -101,89 +101,6 @@ static void lvgl_port_task(void *arg)
     }
 }
 
-// static lv_disp_t *lvgl_port_display_init(void)
-// {
-//     ESP_LOGD(TAG, "Initialize SPI bus");
-//     const spi_bus_config_t buscfg = {
-//         .sclk_io_num     = BSP_LCD_SPI_CLK,
-//         .mosi_io_num     = BSP_LCD_SPI_MOSI,
-//         .miso_io_num     = BSP_LCD_SPI_MISO,
-//         .quadwp_io_num   = GPIO_NUM_NC,
-//         .quadhd_io_num   = GPIO_NUM_NC,
-//         .max_transfer_sz = LVGL_BUFF_SIZE_PIX * sizeof(lv_color_t),
-//     };
-//     BSP_ERROR_CHECK_RETURN_NULL(spi_bus_initialize(BSP_LCD_SPI_NUM, &buscfg, SPI_DMA_CH_AUTO));
-
-//     ESP_LOGD(TAG, "Install panel IO");
-//     esp_lcd_panel_io_handle_t io_handle = NULL;
-//     const esp_lcd_panel_io_spi_config_t io_config = {
-//         .dc_gpio_num = BSP_LCD_DC,
-//         .cs_gpio_num = BSP_LCD_SPI_CS,
-//         .pclk_hz = BSP_LCD_PIXEL_CLOCK_HZ,
-//         .lcd_cmd_bits = LCD_CMD_BITS,
-//         .lcd_param_bits = LCD_PARAM_BITS,
-//         .spi_mode = 0,
-//         .trans_queue_depth = 10,
-//         .on_color_trans_done = lvgl_port_flush_ready,
-//         .user_ctx = &disp_drv,
-//     };
-//     // Attach the LCD to the SPI bus
-//     BSP_ERROR_CHECK_RETURN_NULL(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)BSP_LCD_SPI_NUM, &io_config, &io_handle));
-
-//     ESP_LOGD(TAG, "Install LCD driver for ST7735");
-//     esp_lcd_panel_handle_t panel_handle = NULL;
-//     const esp_lcd_panel_dev_config_t panel_config = {
-//         .reset_gpio_num = BSP_LCD_RST,
-//         .color_space = ESP_LCD_COLOR_SPACE_BGR,
-//         .bits_per_pixel = 16,
-//     };
-//     BSP_ERROR_CHECK_RETURN_NULL(esp_lcd_new_panel_st7735(io_handle, &panel_config, &panel_handle));
-
-//     esp_lcd_panel_reset(panel_handle);
-//     esp_lcd_panel_init(panel_handle);
-//     esp_lcd_panel_set_gap(panel_handle,1,26); //Why??
-//     esp_lcd_panel_mirror(panel_handle, true, false);
-//     esp_lcd_panel_swap_xy(panel_handle, true);
-//     esp_lcd_panel_invert_color(panel_handle, true);
-//     esp_lcd_panel_disp_on_off(panel_handle, true);
-
-//     // Alloc draw buffers used by LVGL
-//     // It's recommended to choose the size of the draw buffer(s) to be at least 1/10 screen sized
-//     lv_color_t *buf1 = heap_caps_malloc(LVGL_BUFF_SIZE_PIX * sizeof(lv_color_t), MALLOC_CAP_DMA);
-//     BSP_NULL_CHECK(buf1, NULL);
-//     lv_color_t *buf2 = heap_caps_malloc(LVGL_BUFF_SIZE_PIX * sizeof(lv_color_t), MALLOC_CAP_DMA);
-//     BSP_NULL_CHECK(buf2, NULL);
-//     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, LVGL_BUFF_SIZE_PIX);
-
-//     ESP_LOGI(TAG, "Registering display driver to LVGL");
-//     lv_disp_drv_init(&disp_drv);
-//     disp_drv.hor_res = BSP_LCD_H_RES;
-//     disp_drv.ver_res = BSP_LCD_V_RES;
-//     disp_drv.flush_cb = lvgl_port_flush_callback;
-//     disp_drv.drv_update_cb = lvgl_port_update_callback;
-//     disp_drv.draw_buf = &disp_buf;
-//     disp_drv.user_data = panel_handle;
-//     return lv_disp_drv_register(&disp_drv);
-// }
-
-// lv_disp_t *bsp_display_start(void)
-// {
-    
-//     //lv_init();
-//     //lv_disp_t *disp = lvgl_port_display_init();
-    
-//     BSP_ERROR_CHECK_RETURN_NULL(lvgl_port_tick_init());
-
-//     lvgl_mux = xSemaphoreCreateMutex();
-//     BSP_NULL_CHECK(lvgl_mux, NULL);
-    
-//     xTaskCreate(lvgl_port_task, "LVGLtask", 4096, NULL, CONFIG_BSP_DISPLAY_LVGL_TASK_PRIORITY, NULL);
-//     //xTaskCreatePinnedToCore(lvgl_port_task, "LVGLtask", 4096, NULL, 6, NULL,0);
-
-//     //return disp;
-//     return NULL;
-// }
-
 lv_disp_t *bsp_display_start(void){
 
     ESP_LOGI(TAG, "Turn off LCD backlight");
@@ -249,7 +166,7 @@ lv_disp_t *bsp_display_start(void){
 
     ESP_ERROR_CHECK(esp_lcd_panel_swap_xy(panel_handle, true)); //Why true?
     // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
-    ESP_ERROR_CHECK(esp_lcd_panel_disp_off(panel_handle, true));
+    ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
 
     //alloc draw buffers used by LVGL
     //it's recommended to choose the size of the draw buffer(s) to be at least 1/10 screen sized

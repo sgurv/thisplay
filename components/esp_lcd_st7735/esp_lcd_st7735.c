@@ -323,15 +323,15 @@ static esp_err_t panel_st7735_set_gap(esp_lcd_panel_t *panel, int x_gap, int y_g
     return ESP_OK;
 }
 
-static esp_err_t panel_st7735_disp_on_off(esp_lcd_panel_t *panel, bool off)
+static esp_err_t panel_st7735_disp_on_off(esp_lcd_panel_t *panel, bool on_off)
 {
     st7735_panel_t *st7735 = __containerof(panel, st7735_panel_t, base);
     esp_lcd_panel_io_handle_t io = st7735->io;
     int command = 0;
-    if (off) {
-        command = LCD_CMD_DISPOFF;
-    } else {
+    if (on_off) {
         command = LCD_CMD_DISPON;
+    } else {
+        command = LCD_CMD_DISPOFF;
     }
     esp_lcd_panel_io_tx_param(io, command, NULL, 0);
     return ESP_OK;
