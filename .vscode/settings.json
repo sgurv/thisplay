@@ -13,6 +13,7 @@
         "esp_timer.h": "c",
         "gpio.h": "c",
         "sdkconfig.h": "c",
-        "spi_master.h": "c"
+        "spi_master.h": "c",
+        "ui.h": "c"
     }
 }
