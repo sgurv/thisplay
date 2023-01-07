@@ -26,6 +26,8 @@ static const char *TAG = "ws";
 
 #define BLINK_TEST_GPIO     36 /* For debuging purpose*/
 
+#define BUTTON_0_GPIO     0 /* For button 0 -- this is BOOT pin*/
+
 static lv_disp_t *disp;
 
 // //LED global
@@ -33,6 +35,10 @@ static lv_disp_t *disp;
 
 char clock_str_buff[8];
 char log_str_buff[128];
+
+static void button_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
+static int button_get_pressed_id(void);
+
 
 static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
@@ -50,6 +56,46 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
+/*Will be called by the library to read the button*/
+static void button_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
+{
+
+    static uint8_t last_btn = 0;
+
+    /*Get the pressed button's ID*/
+    int8_t btn_act = button_get_pressed_id();
+
+    if(btn_act >= 0) {
+        data->state = LV_INDEV_STATE_PR;
+        last_btn = btn_act;
+    }
+    else {
+        data->state = LV_INDEV_STATE_REL;
+    }
+
+    /*Save the last pressed button's ID*/
+    data->btn_id = last_btn;
+}
+
+/*Get ID  (0, 1, 2 ..) of the pressed button*/
+static int button_get_pressed_id(void)
+{
+    uint8_t i;
+
+    /*Check to buttons see which is being pressed (assume there are 2 buttons)*/
+    for(i = 0; i < 2; i++) {
+        /*Return the pressed button's ID*/
+        if(gpio_get_level(BUTTON_0_GPIO) == 0) { //if pressed
+            return 0; //return button id 0
+        }
+
+        //.... check other buttons
+    }
+
+    /*No button pressed*/
+    return -1;
+}
+
 void app_main(void)
 {
  
@@ -57,6 +103,10 @@ void app_main(void)
     // gpio_reset_pin(BLINK_TEST_GPIO);
     // /* Set the GPIO as a push/pull output */
     // gpio_set_direction(BLINK_TEST_GPIO, GPIO_MODE_OUTPUT);
+
+    gpio_reset_pin(BUTTON_0_GPIO);
+    /* Set the GPIO as a input */
+    gpio_set_direction(BUTTON_0_GPIO, GPIO_MODE_INPUT);
 
     //---Wifi
 
@@ -130,12 +180,30 @@ void app_main(void)
     // /*Set data*/
     // lv_qrcode_update(qr, data, strlen(data));
 
+    /*Register a button input device*/
+    lv_indev_t * indev_button;
+
+    lv_indev_drv_t indev_drv;
+
+    lv_indev_drv_init(&indev_drv);
+    indev_drv.type = LV_INDEV_TYPE_BUTTON;
+    indev_drv.read_cb = button_read;
+    indev_button = lv_indev_drv_register(&indev_drv);
+
+    /*Assign buttons to points on the screen*/
+    static const lv_point_t btn_points[2] = {
+        {0, 0},   /*Button 0 -> x:0; y:0*/
+        {120, 20},  /*Button 1 -> not used*/
+    };
+
+    lv_indev_set_button_points(indev_button, btn_points);
+
 
     //Squareline
     ui_init();
     //default display log
     snprintf(log_str_buff,50,"1. Display log started");
-    lv_textarea_set_text(ui_Screen1_TextArea1, log_str_buff);
+    lv_textarea_set_text(ui_Screen5_TextArea1, log_str_buff);
     //lv_disp_load_scr(ui_Screen2);
     // /* Screen operation done -> release for the other task */
     bsp_display_unlock();
@@ -160,9 +228,9 @@ void app_main(void)
                 minute = 0;
             }
             snprintf(clock_str_buff,8,"%02d:%02d",hour,minute);
-            lv_label_set_text(ui_Screen2_Label1, clock_str_buff);
+            lv_label_set_text(ui_Screen1_Label1, clock_str_buff);
 
-            lv_textarea_set_text(ui_Screen1_TextArea1, log_str_buff);
+            lv_textarea_set_text(ui_Screen5_TextArea1, log_str_buff);
 
             i = 0;
         }
