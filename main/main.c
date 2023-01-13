@@ -34,6 +34,21 @@ static const char *TAG = "ws";
 
 #define BUTTON_0_GPIO     0 /* For button 0 -- this is BOOT pin*/
 
+#define LCD_LARGE_RST (GPIO_NUM_5) //(Active Low) Must be in reset state first
+#define LCD_LARGE_DC    (GPIO_NUM_4)
+#define LCD_LARGE_CLK   (GPIO_NUM_10)
+#define LCD_LARGE_CS    (GPIO_NUM_13)
+#define LCD_LARGE_SIO_0 (GPIO_NUM_12)
+#define LCD_LARGE_SIO_1 (GPIO_NUM_11)
+#define LCD_LARGE_SIO_2 (GPIO_NUM_16)
+#define LCD_LARGE_SIO_3 (GPIO_NUM_17)
+#define LCD_LARGE_BK_LIGHT (GPIO_NUM_34)
+
+#define TP_INT          (GPIO_NUM_2)
+#define TP_RST          (GPIO_NUM_3) //(ActiveLow)
+#define TP_SDA          (GPIO_NUM_14)
+#define TP_SCL          (GPIO_NUM_15)
+
 static lv_disp_t *disp;
 
 // //LED global
@@ -110,10 +125,16 @@ void app_main(void)
     time_t now;
     struct tm timeinfo;
  
-    // ESP_LOGI(TAG, "Test GPIO LED!");
-    // gpio_reset_pin(BLINK_TEST_GPIO);
-    // /* Set the GPIO as a push/pull output */
-    // gpio_set_direction(BLINK_TEST_GPIO, GPIO_MODE_OUTPUT);
+    //ESP_LOGI(TAG, "Test GPIO LED!");
+    gpio_reset_pin(LCD_LARGE_RST);
+    /* Set the GPIO as a push/pull output */
+    gpio_set_direction(LCD_LARGE_RST, GPIO_MODE_OUTPUT);
+    gpio_set_level(LCD_LARGE_RST,0); //
+
+    gpio_reset_pin(LCD_LARGE_BK_LIGHT);
+    /* Set the GPIO as a push/pull output */
+    gpio_set_direction(LCD_LARGE_BK_LIGHT, GPIO_MODE_OUTPUT);
+    gpio_set_level(LCD_LARGE_BK_LIGHT,0); //
 
     gpio_reset_pin(BUTTON_0_GPIO);
     /* Set the GPIO as a input */
