@@ -1,0 +1,9 @@
+version: "1.0.0"
+description: CST816D LCD Touch controller
+url: https://sandeepguria.in/
+
+dependencies:
+  idf: ">=5.0"
+  esp_lcd_touch:
+    version: ">=1.0.3"
+    public: true

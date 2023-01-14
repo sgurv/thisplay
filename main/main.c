@@ -10,6 +10,7 @@
 #include "esp_lcd_panel_ops.h"
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
+#include "driver/i2c.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_err.h"
