@@ -108,50 +108,80 @@ err:
 static esp_err_t esp_lcd_touch_cst816d_read_data(esp_lcd_touch_handle_t tp)
 {
     esp_err_t err;
-    uint8_t buf[41];
+    uint8_t buf[6];
     uint8_t touch_cnt = 0;
     uint8_t clear = 0;
     size_t i = 0;
 
     assert(tp != NULL);
 
-    err = touch_cst816d_i2c_read(tp, ESP_LCD_TOUCH_CST816D_READ_XY_REG, buf, 1);
+    err = touch_cst816d_i2c_read(tp, ESP_LCD_TOUCH_CST816D_READ_XY_REG, buf,6);
     ESP_RETURN_ON_ERROR(err, TAG, "I2C read error!");
+/*
+    Gesture reg 0x01
+    --Actually for CST816S
+    0x00 = "none",
+    0x01 = "slide down",
+    0x02 = "slide up",
+    0x03 = "slide left",
+    0x04 = "slide right",
+    0x05 = "single click",
+    0x0B = "double click",
+    0x0C = "long press",
+    */
 
-    /* Any touch data? */
-    if ((buf[0] & 0x80) == 0x00) {
-        //touch_cst816d_i2c_write(tp, ESP_LCD_TOUCH_CST816D_READ_XY_REG, clear);
-    } else {
-        /* Count of touched points */
-        touch_cnt = buf[0] & 0x0f;
-        if (touch_cnt > 5 || touch_cnt == 0) {
-            touch_cst816d_i2c_write(tp, ESP_LCD_TOUCH_CST816D_READ_XY_REG, clear);
-            return ESP_OK;
-        }
-
-        /* Read all points */
-        err = touch_cst816d_i2c_read(tp, ESP_LCD_TOUCH_CST816D_READ_XY_REG + 1, &buf[1], touch_cnt * 8);
-        ESP_RETURN_ON_ERROR(err, TAG, "I2C read error!");
-
-        /* Clear all */
-        //err = touch_cst816d_i2c_write(tp, ESP_LCD_TOUCH_CST816D_READ_XY_REG, clear);
-        //ESP_RETURN_ON_ERROR(err, TAG, "I2C read error!");
-
+   /*
+   reg addr
+   0x02 = number of finger
+   */
+    if(buf[1] != 0x00){ // some finger
+    
         portENTER_CRITICAL(&tp->data.lock);
 
-        /* Number of touched points */
-        touch_cnt = 1 ; //(touch_cnt > CONFIG_ESP_LCD_TOUCH_MAX_POINTS ? CONFIG_ESP_LCD_TOUCH_MAX_POINTS : touch_cnt);
-        tp->data.points = touch_cnt;
+        tp->data.points = 1; // using only 1 point for now
 
-        /* Fill all coordinates */
-        for (i = 0; i < touch_cnt; i++) {
-            tp->data.coords[i].x = ((uint16_t)buf[(i * 8) + 3] << 8) + buf[(i * 8) + 2];
-            tp->data.coords[i].y = (((uint16_t)buf[(i * 8) + 5] << 8) + buf[(i * 8) + 4]);
-            tp->data.coords[i].strength = (((uint16_t)buf[(i * 8) + 7] << 8) + buf[(i * 8) + 6]);
-        }
+        //data->action = buf[3] >> 6;
+        tp->data.coords[i].x = ((buf[2] & 0x0f) << 8) | buf[3];
+        tp->data.coords[i].y = ((buf[4] & 0x0f) << 8) | buf[5];
+        tp->data.coords[i].strength = 255;
 
         portEXIT_CRITICAL(&tp->data.lock);
     }
+
+    /* Any touch data? */
+    // if ((buf[0] & 0x80) == 0x00) {
+    //     //touch_cst816d_i2c_write(tp, ESP_LCD_TOUCH_CST816D_READ_XY_REG, clear);
+    // } else {
+    //     /* Count of touched points */
+    //     touch_cnt = buf[0] & 0x0f;
+    //     if (touch_cnt > 5 || touch_cnt == 0) {
+    //         touch_cst816d_i2c_write(tp, ESP_LCD_TOUCH_CST816D_READ_XY_REG, clear);
+    //         return ESP_OK;
+    //     }
+
+    //     /* Read all points */
+    //     err = touch_cst816d_i2c_read(tp, ESP_LCD_TOUCH_CST816D_READ_XY_REG + 1, &buf[1], touch_cnt * 8);
+    //     ESP_RETURN_ON_ERROR(err, TAG, "I2C read error!");
+
+    //     /* Clear all */
+    //     //err = touch_cst816d_i2c_write(tp, ESP_LCD_TOUCH_CST816D_READ_XY_REG, clear);
+    //     //ESP_RETURN_ON_ERROR(err, TAG, "I2C read error!");
+
+    //     portENTER_CRITICAL(&tp->data.lock);
+
+    //     /* Number of touched points */
+    //     touch_cnt = 1 ; //(touch_cnt > CONFIG_ESP_LCD_TOUCH_MAX_POINTS ? CONFIG_ESP_LCD_TOUCH_MAX_POINTS : touch_cnt);
+    //     tp->data.points = touch_cnt;
+
+    //     /* Fill all coordinates */
+    //     for (i = 0; i < touch_cnt; i++) {
+    //         tp->data.coords[i].x = ((uint16_t)buf[(i * 8) + 3] << 8) + buf[(i * 8) + 2];
+    //         tp->data.coords[i].y = (((uint16_t)buf[(i * 8) + 5] << 8) + buf[(i * 8) + 4]);
+    //         tp->data.coords[i].strength = (((uint16_t)buf[(i * 8) + 7] << 8) + buf[(i * 8) + 6]);
+    //     }
+
+    //     portEXIT_CRITICAL(&tp->data.lock);
+    // }
 
     return ESP_OK;
 }
@@ -248,12 +278,12 @@ static esp_err_t touch_cst816d_i2c_read(esp_lcd_touch_handle_t tp, uint16_t reg,
     return esp_lcd_panel_io_rx_param(tp->io, reg, data, len);
 }
 
-// static esp_err_t touch_cst816d_i2c_write(esp_lcd_touch_handle_t tp, uint16_t reg, uint8_t data)
-// {
-//     assert(tp != NULL);
+static esp_err_t touch_cst816d_i2c_write(esp_lcd_touch_handle_t tp, uint16_t reg, uint8_t data)
+{
+    assert(tp != NULL);
 
-//     // *INDENT-OFF*
-//     /* Write data */
-//     return esp_lcd_panel_io_tx_param(tp->io, reg, (uint8_t[]){data}, 1);
-//     // *INDENT-ON*
-// }
+    // *INDENT-OFF*
+    /* Write data */
+    return esp_lcd_panel_io_tx_param(tp->io, reg, (uint8_t[]){data}, 1);
+    // *INDENT-ON*
+}
