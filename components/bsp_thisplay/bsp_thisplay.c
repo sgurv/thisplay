@@ -152,9 +152,9 @@ esp_lcd_touch_handle_t bsp_touch_panel_init(void)
             .reset = 0, //Reset level
             .interrupt = 1, //Active High
         },
-        .flags = { //Match with display
+        .flags = { //Match it with the display settings
             .swap_xy = 0,
-            .mirror_x = 0,
+            .mirror_x = 1,
             .mirror_y = 0,
         },
     };
@@ -297,7 +297,7 @@ lv_disp_t *bsp_display_start(void){
     // Attach the LCD to the SPI bus
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)BSP_LCD_SPI_NUM, &io_config, &io_handle));
 
-    // ESP_LOGI(TAG, "Install ST7735 panel driver");
+    // ESP_LOGI(TAG, "Install panel driver");
     esp_lcd_panel_handle_t panel_handle = NULL;
 
 #ifndef USE_LARGE_DISPLAY    

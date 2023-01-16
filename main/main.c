@@ -192,6 +192,9 @@ void app_main(void)
     tzset(); //update C library runtime data for the new timezone.
 
     //End Time stuff
+    
+    bsp_i2c_init(); // Required for Touch I2C to work
+
     //--Display
     disp = bsp_display_start();
 
@@ -223,23 +226,23 @@ void app_main(void)
     // /*Set data*/
     // lv_qrcode_update(qr, data, strlen(data));
 
-    /*Register a button input device*/
-    lv_indev_t * indev_button;
+    // /*Register a button input device*/
+    // lv_indev_t * indev_button;
 
-    lv_indev_drv_t indev_drv;
+    // lv_indev_drv_t indev_drv;
 
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_BUTTON;
-    indev_drv.read_cb = button_read;
-    indev_button = lv_indev_drv_register(&indev_drv);
+    // lv_indev_drv_init(&indev_drv);
+    // indev_drv.type = LV_INDEV_TYPE_BUTTON;
+    // indev_drv.read_cb = button_read;
+    // indev_button = lv_indev_drv_register(&indev_drv);
 
-    /*Assign buttons to points on the screen*/
-    static const lv_point_t btn_points[2] = {
-        {0, 0},   /*Button 0 -> x:0; y:0*/
-        {120, 20},  /*Button 1 -> not used*/
-    };
+    // /*Assign buttons to points on the screen*/
+    // static const lv_point_t btn_points[2] = {
+    //     {0, 0},   /*Button 0 -> x:0; y:0*/
+    //     {120, 20},  /*Button 1 -> not used*/
+    // };
 
-    lv_indev_set_button_points(indev_button, btn_points);
+    // lv_indev_set_button_points(indev_button, btn_points);
 
 
     //Squareline
@@ -264,12 +267,12 @@ void app_main(void)
         //lv_timer_handler();
         if(i++ == 100){
             //lv_led_toggle(led1);
-            if(++minute == 60){
-                if(++hour == 24){
-                    hour = 0;
-                }
-                minute = 0;
-            }
+            // if(++minute == 60){
+            //     if(++hour == 24){
+            //         hour = 0;
+            //     }
+            //     minute = 0;
+            // }
 
             time(&now);
             localtime_r(&now, &timeinfo);

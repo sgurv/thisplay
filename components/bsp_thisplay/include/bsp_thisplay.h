@@ -109,7 +109,7 @@ extern "C" {
     } while(0)
 #endif
 
-//lv_disp_t *bsp_sem_test(void); //TEST
+esp_err_t bsp_i2c_init(void); // For large display touch
 
 /**
  * @brief Initialize display and graphics library

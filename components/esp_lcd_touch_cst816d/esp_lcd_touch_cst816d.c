@@ -15,8 +15,19 @@
 static const char *TAG = "CST816D";
 
 /* CST816D registers TODO: complete it */
-#define ESP_LCD_TOUCH_CST816D_READ_XY_REG (0x01)
-#define ESP_LCD_TOUCH_CST816D_CONFIG_REG  (0x00)
+#define ESP_LCD_TOUCH_CST816D_GestureID (0x01) // Gesture register
+#define ESP_LCD_TOUCH_CST816D_FingerNum (0x02) //Number of fingers
+#define ESP_LCD_TOUCH_CST816D_XposH     (0x03) //x high four digits
+#define ESP_LCD_TOUCH_CST816D_XposL     (0x04) //x low eight bits
+#define ESP_LCD_TOUCH_CST816D_YposH     (0x05) // High four digits of y
+#define ESP_LCD_TOUCH_CST816D_YposL     (0x06) //y lower eight bits
+#define ESP_LCD_TOUCH_CST816D_ChipID    (0xA7) //chip model
+#define ESP_LCD_TOUCH_CST816D_MotionMask (0xEC) //Trigger action
+#define ESP_LCD_TOUCH_CST816D_AutoSleepTime (0xF9) //auto sleep
+#define ESP_LCD_TOUCH_CST816D_IrqCrl    (0xFA) //interrupt control
+#define ESP_LCD_TOUCH_CST816D_AutoReset (0xFB) //Sleep without gesture //write 0 to disable
+#define ESP_LCD_TOUCH_CST816D_LongPressTime (0xFC) //Long press to sleep
+#define ESP_LCD_TOUCH_CST816D_DisAutoSleep  (0xFE) //Enable low power mode
 
 /*******************************************************************************
 * Function definitions
@@ -109,15 +120,19 @@ static esp_err_t esp_lcd_touch_cst816d_read_data(esp_lcd_touch_handle_t tp)
 {
     esp_err_t err;
     uint8_t buf[6];
-    uint8_t touch_cnt = 0;
-    uint8_t clear = 0;
+    //uint8_t touch_cnt = 0;
+    //uint8_t clear = 0;
     size_t i = 0;
+
+    //New
+    uint16_t x,y;
 
     assert(tp != NULL);
 
-    err = touch_cst816d_i2c_read(tp, ESP_LCD_TOUCH_CST816D_READ_XY_REG, buf,6);
+    err = touch_cst816d_i2c_read(tp, ESP_LCD_TOUCH_CST816D_GestureID, buf,6);
     ESP_RETURN_ON_ERROR(err, TAG, "I2C read error!");
-/*
+
+    /*
     Gesture reg 0x01
     --Actually for CST816S
     0x00 = "none",
@@ -130,22 +145,30 @@ static esp_err_t esp_lcd_touch_cst816d_read_data(esp_lcd_touch_handle_t tp)
     0x0C = "long press",
     */
 
-   /*
-   reg addr
-   0x02 = number of finger
-   */
-    if(buf[1] != 0x00){ // some finger
+    /*
+    reg addr
+    0x02 = number of finger
+    // Event (0 = Down, 1 = Up, 2 = Contact)
+    */
+    if(buf[1] == 0x01){ // some finger
     
-        portENTER_CRITICAL(&tp->data.lock);
+        //if((buf[2] >> 6) == 0x00){ //Down 
+            //if((buf[4] >> 4) == 0x00){ //ID 0
+                x = ((buf[2] & 0x0f) << 8) | buf[3];
+                y = ((buf[4] & 0x0f) << 8) | buf[5];
+                if(x<240 && y<280){ //OK
+                    portENTER_CRITICAL(&tp->data.lock);
 
-        tp->data.points = 1; // using only 1 point for now
+                    tp->data.points = 1; // using only 1 point for now
+                    //data->action = buf[3] >> 6;
+                    tp->data.coords[0].x = x;
+                    tp->data.coords[0].y = y;
+                    //tp->data.coords[i].strength = 255; // its null
 
-        //data->action = buf[3] >> 6;
-        tp->data.coords[i].x = ((buf[2] & 0x0f) << 8) | buf[3];
-        tp->data.coords[i].y = ((buf[4] & 0x0f) << 8) | buf[5];
-        tp->data.coords[i].strength = 255;
-
-        portEXIT_CRITICAL(&tp->data.lock);
+                    portEXIT_CRITICAL(&tp->data.lock);
+                }
+            //}
+        //}
     }
 
     /* Any touch data? */
