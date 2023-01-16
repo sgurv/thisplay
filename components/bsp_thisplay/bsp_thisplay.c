@@ -154,7 +154,7 @@ esp_lcd_touch_handle_t bsp_touch_panel_init(void)
         },
         .flags = { //Match it with the display settings
             .swap_xy = 0,
-            .mirror_x = 1,
+            .mirror_x = 0,
             .mirror_y = 0,
         },
     };
@@ -201,9 +201,24 @@ static esp_err_t lvgl_port_indev_init(void)
     lv_indev_drv_init(&indev_drv_tp);
     indev_drv_tp.type = LV_INDEV_TYPE_POINTER;
     indev_drv_tp.read_cb = bsp_touchpad_read;
+    //indev_drv_tp.feedback_cb = ;
     indev_drv_tp.user_data = tp;
     indev_touchpad = lv_indev_drv_register(&indev_drv_tp);
     BSP_NULL_CHECK(indev_touchpad, ESP_ERR_NO_MEM);
+
+    //--pointer
+    lv_obj_t * btn = lv_btn_create(lv_scr_act());     /*Add a button the current screen*/
+    lv_obj_set_size(btn, 8, 8); 
+    // lv_obj_t *cursor;
+    // cursor = lv_obj_create(lv_scr_act());
+    // lv_obj_set_size(cursor, 8, 8);
+    // static lv_style_t style_round;
+    // //lv_style_set_bg_color(&style_round,LV_PALETTE_RED);
+    // lv_style_set_bg_opa(&style_round,LV_OPA_COVER);
+    // lv_style_set_radius(&style_round,8);
+    // lv_obj_add_style(cursor, &style_round,1);
+    //lv_obj_set_click(cursor, false);
+    lv_indev_set_cursor(indev_touchpad, btn);
 
     return ESP_OK;
 }

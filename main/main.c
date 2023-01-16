@@ -226,39 +226,36 @@ void app_main(void)
     // /*Set data*/
     // lv_qrcode_update(qr, data, strlen(data));
 
-    // /*Register a button input device*/
-    // lv_indev_t * indev_button;
+    /*Register a button input device*/
+    lv_indev_t * indev_button;
 
-    // lv_indev_drv_t indev_drv;
+    lv_indev_drv_t indev_drv;
 
-    // lv_indev_drv_init(&indev_drv);
-    // indev_drv.type = LV_INDEV_TYPE_BUTTON;
-    // indev_drv.read_cb = button_read;
-    // indev_button = lv_indev_drv_register(&indev_drv);
+    lv_indev_drv_init(&indev_drv);
+    indev_drv.type = LV_INDEV_TYPE_BUTTON;
+    indev_drv.read_cb = button_read;
+    indev_button = lv_indev_drv_register(&indev_drv);
 
-    // /*Assign buttons to points on the screen*/
-    // static const lv_point_t btn_points[2] = {
-    //     {0, 0},   /*Button 0 -> x:0; y:0*/
-    //     {120, 20},  /*Button 1 -> not used*/
-    // };
+    /*Assign buttons to points on the screen*/
+    static const lv_point_t btn_points[2] = {
+        {10, 10},   /*Button 0 -> x:0; y:0*/
+        {120, 20},  /*Button 1 -> not used*/
+    };
 
-    // lv_indev_set_button_points(indev_button, btn_points);
-
+    lv_indev_set_button_points(indev_button, btn_points);
 
     //Squareline
     ui_init();
     //default display log
     snprintf(log_str_buff,50,"1. Display log started");
     lv_textarea_set_text(ui_Screen5_TextArea1, log_str_buff);
-    lv_disp_load_scr(ui_Screen2);
+    //lv_disp_load_scr(ui_Screen2);
     /* Screen operation done -> release for the other task */
     bsp_display_unlock();
 //----END UI
 
     unsigned int i = 0;
-    uint8_t hour,minute;
-    hour = 10;
-    minute = 15;
+
     while (1) {
         // raise the task priority of LVGL and/or reduce the handler period can improve the performance
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -266,18 +263,10 @@ void app_main(void)
         // The task running lv_timer_handler should have lower priority than that running `lv_tick_inc`
         //lv_timer_handler();
         if(i++ == 100){
-            //lv_led_toggle(led1);
-            // if(++minute == 60){
-            //     if(++hour == 24){
-            //         hour = 0;
-            //     }
-            //     minute = 0;
-            // }
-
+  
             time(&now);
             localtime_r(&now, &timeinfo);
 
-            //snprintf(clock_str_buff,8,"%02d:%02d",hour,minute);
             snprintf(clock_str_buff,8,"%02d:%02d",timeinfo.tm_hour,timeinfo.tm_min);
             lv_label_set_text(ui_Screen1_Label1, clock_str_buff);
 

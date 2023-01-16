@@ -152,10 +152,10 @@ static esp_err_t esp_lcd_touch_cst816d_read_data(esp_lcd_touch_handle_t tp)
     */
     if(buf[1] == 0x01){ // some finger
     
-        //if((buf[2] >> 6) == 0x00){ //Down 
-            //if((buf[4] >> 4) == 0x00){ //ID 0
-                x = ((buf[2] & 0x0f) << 8) | buf[3];
-                y = ((buf[4] & 0x0f) << 8) | buf[5];
+        //if(((buf[2] & 0xf0) >> 6) == 0x00){ //Down 
+            if((buf[4] >> 4) == 0x00){ //ID 0
+                x = (uint16_t)((uint16_t)(buf[2] & 0x0f) << 8) + (uint16_t)buf[3];
+                y = (uint16_t)((uint16_t)(buf[4] & 0x0f) << 8) + (uint16_t)buf[5];
                 if(x<240 && y<280){ //OK
                     portENTER_CRITICAL(&tp->data.lock);
 
@@ -167,7 +167,7 @@ static esp_err_t esp_lcd_touch_cst816d_read_data(esp_lcd_touch_handle_t tp)
 
                     portEXIT_CRITICAL(&tp->data.lock);
                 }
-            //}
+            }
         //}
     }
 
