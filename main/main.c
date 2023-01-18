@@ -36,7 +36,7 @@ static lv_disp_t *disp;
 // //LED global
 lv_obj_t * led1;
 
-char clock_str_buff[8];
+char clock_str_buff[16];
 char clock_str_footer[32];
 char log_str_buff[128];
 
@@ -247,8 +247,8 @@ void app_main(void)
     //Squareline
     ui_init();
     //default display log
-    snprintf(log_str_buff,50,"1. Display log started");
-    lv_textarea_set_text(ui_Screen5_TextArea1, log_str_buff);
+    //snprintf(log_str_buff,50,"1. Display log started");
+    //lv_textarea_set_text(ui_Screen5_TextArea1, log_str_buff);
     //lv_disp_load_scr(ui_Screen2);
     /* Screen operation done -> release for the other task */
     bsp_display_unlock();
@@ -267,13 +267,13 @@ void app_main(void)
             time(&now);
             localtime_r(&now, &timeinfo);
 
-            snprintf(clock_str_buff,8,"%02d:%02d",timeinfo.tm_hour,timeinfo.tm_min);
-            lv_label_set_text(ui_Screen1_Label1, clock_str_buff);
+            snprintf(clock_str_buff,16,"%02d:%02d:%02d",timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec);
+            lv_label_set_text(ui_Label1, clock_str_buff);
 
             strftime(clock_str_footer, sizeof(clock_str_footer), "%a,%d %b %Y", &timeinfo);
-            lv_label_set_text(ui_Screen1_Label3, clock_str_footer);
+            lv_label_set_text(ui_Label4, clock_str_footer);
 
-            lv_textarea_set_text(ui_Screen5_TextArea1, log_str_buff);
+            //lv_textarea_set_text(ui_Screen5_TextArea1, log_str_buff);
 
             i = 0;
         }

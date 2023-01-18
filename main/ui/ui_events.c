@@ -1,31 +1,16 @@
 // SquareLine LVGL GENERATED FILE
-// EDITOR VERSION: SquareLine Studio 1.1.1
-// LVGL VERSION: 8.3.3
-// PROJECT: DigiClock
+// EDITOR VERSION: SquareLine Studio 1.2.0
+// LVGL VERSION: 8.3.4
+// PROJECT: thisplay
 
 #include "ui.h"
 
-void EventScreen1Clicked(lv_event_t * e)
+void Screen1Event1Clicked(lv_event_t * e)
 {
 	// Your code here
 }
 
-void EventScreen2Clicked(lv_event_t * e)
-{
-	// Your code here
-}
-
-void EventScreen3Clicked(lv_event_t * e)
-{
-	// Your code here
-}
-
-void EventScreen4Clicked(lv_event_t * e)
-{
-	// Your code here
-}
-
-void EventScreen5Clicked(lv_event_t * e)
+void Screen2Event1Clicked(lv_event_t * e)
 {
 	// Your code here
 }
